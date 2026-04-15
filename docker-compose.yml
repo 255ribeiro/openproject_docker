@@ -1,37 +1,48 @@
 services:
   openproject-db:
-    image: postgres:17
+    image: postgres:15
     container_name: openproject-db
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: ffribeiro
-      POSTGRES_PASSWORD: 1234
       POSTGRES_DB: openproject
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: openproject
+      POSTGRES_PASSWORD: openproject
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openproject -d openproject"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     networks:
       - openproject-network
 
   openproject-app:
     image: openproject/openproject:17-slim-bim
     container_name: openproject-app
+    restart: unless-stopped
+    depends_on:
+      openproject-db:
+        condition: service_healthy
     ports:
       - "8080:8080"
     environment:
-      DATABASE_URL: postgresql://ffribeiro:1234@openproject-db:5432/openproject
+      DATABASE_URL: postgresql://openproject:openproject@openproject-db:5432/openproject
+      SECRET_KEY_BASE: local-openproject-secret-key-change-me
       OPENPROJECT_HTTPS: "false"
       OPENPROJECT_HSTS: "false"
-      OPENPROJECT_FORCE_HTTPS: "false"
-      RAILS_ENV: production
-      PUMA_BIND: "tcp://0.0.0.0:8080"
-    depends_on:
-      - openproject-db
+      OPENPROJECT_HOST__NAME: "localhost:8080"
     networks:
       - openproject-network
     volumes:
       - openproject_assets:/var/openproject/assets
-    command: sh -c "bundle exec rails db:migrate RAILS_ENV=production && ./docker/prod/entrypoint-slim.sh ./docker/prod/web"
+    command:
+      - sh
+      - -c
+      - |
+        bundle exec rails db:migrate RAILS_ENV=production &&
+        bundle exec rails runner -e production 'u = User.find_or_initialize_by(login: "admin"); unless u.persisted?; u.assign_attributes(firstname: "Admin", lastname: "User", mail: "admin@example.local", admin: true, status: 1, first_login: true, type: "User"); u.save!(validate: false); pw = UserPassword::Bcrypt.new(user: u, plain_password: "admin123"); pw.save!; puts "Admin user created"; end' &&
+        ./docker/prod/entrypoint-slim.sh ./docker/prod/web
 
 volumes:
   postgres_data:
