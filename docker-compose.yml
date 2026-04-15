@@ -29,6 +29,7 @@ services:
     environment:
       DATABASE_URL: postgresql://openproject:openproject@openproject-db:5432/openproject
       SECRET_KEY_BASE: local-openproject-secret-key-change-me
+      OPENPROJECT_EDITION: "bim"
       OPENPROJECT_HTTPS: "false"
       OPENPROJECT_HSTS: "false"
       OPENPROJECT_HOST__NAME: "localhost:8080"
