@@ -14,7 +14,7 @@ services:
       - openproject-network
 
   openproject-app:
-    image: openproject/openproject:dev-slim-bim
+    image: openproject/openproject:17-slim-bim
     container_name: openproject-app
     ports:
       - "8080:8080"
