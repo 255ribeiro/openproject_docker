@@ -1,0 +1,17 @@
+# Ignore environment variables
+.env
+.env.local
+
+# Ignore Docker override files
+docker-compose.override.yml
+
+# Ignore logs and temporary files
+*.log
+logs/
+tmp/
+
+# Ignore OS and editor files
+.DS_Store
+Thumbs.db
+*.swp
+*~   

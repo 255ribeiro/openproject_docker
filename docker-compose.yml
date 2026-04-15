@@ -1,0 +1,42 @@
+services:
+  openproject-db:
+    image: postgres:15
+    container_name: openproject-db
+    environment:
+      POSTGRES_USER: ffribeiro
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: openproject
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - openproject-network
+
+  openproject-app:
+    image: openproject/openproject:dev-slim-bim
+    container_name: openproject-app
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgresql://ffribeiro:1234@openproject-db:5432/openproject
+      OPENPROJECT_HTTPS: "false"
+      OPENPROJECT_HSTS: "false"
+      OPENPROJECT_FORCE_HTTPS: "false"
+      RAILS_ENV: production
+      PUMA_BIND: "tcp://0.0.0.0:8080"
+    depends_on:
+      - openproject-db
+    networks:
+      - openproject-network
+    volumes:
+      - openproject_assets:/var/openproject/assets
+    command: sh -c "bundle exec rails db:migrate RAILS_ENV=production && ./docker/prod/entrypoint-slim.sh ./docker/prod/web"
+
+volumes:
+  postgres_data:
+  openproject_assets:
+
+networks:
+  openproject-network:
+    driver: bridge
