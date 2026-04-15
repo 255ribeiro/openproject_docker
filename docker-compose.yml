@@ -1,6 +1,6 @@
 services:
   openproject-db:
-    image: postgres:15
+    image: postgres:17
     container_name: openproject-db
     environment:
       POSTGRES_USER: ffribeiro
@@ -39,4 +39,3 @@ volumes:
 
 networks:
   openproject-network:
-    driver: bridge
